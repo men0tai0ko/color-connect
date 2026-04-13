@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="description" content="マッチ3・カラーコネクト — CSS GridとFlexboxだけで作ったブラウザパズルゲーム" />
+  <title>マッチ3・カラーコネクト</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+
+  <div id="app">
+
+    <!-- ========= HEADER ========= -->
+    <header id="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="logo-m3">M3</span>
+          <span class="logo-cc">COLOR CONNECT</span>
+        </div>
+        <div class="hud">
+          <div class="hud-block" id="hud-score">
+            <span class="hud-label">SCORE</span>
+            <span class="hud-value" id="score-display">0</span>
+          </div>
+          <div class="hud-block hud-combo" id="hud-combo">
+            <span class="hud-label">COMBO</span>
+            <span class="hud-value" id="combo-display">0</span>
+          </div>
+          <div class="hud-block hud-timer" id="hud-timer">
+            <span class="hud-label">TIME</span>
+            <span class="hud-value" id="timer-display">60</span>
+          </div>
+          <div class="hud-block" id="hud-best">
+            <span class="hud-label">BEST</span>
+            <span class="hud-value" id="best-display">0</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========= MAIN ========= -->
+    <main id="main">
+      <div id="board-wrap">
+        <div id="game-board" role="grid" aria-label="ゲームボード"></div>
+        <div id="countdown-overlay" aria-hidden="true">
+          <div id="countdown-display"></div>
+        </div>
+      </div>
+      <div id="chain-bar">
+        <div id="chain-bar-inner">
+          <div id="chain-dots"></div>
+          <div id="chain-label">ブロックをタップして繋げよう！</div>
+        </div>
+        <button id="manual-shuffle-btn" class="btn btn-manual-shuffle" aria-label="手動シャッフル（-10秒）">🔀 -10s</button>
+      </div>
+    </main>
+
+    <!-- ========= FOOTER ========= -->
+    <footer id="footer">
+      <button id="start-btn" class="btn btn-primary">▶ START</button>
+      <p class="hint">同じ色を3つ以上つなげてタップ！</p>
+    </footer>
+
+    <!-- ========= OVERLAYS ========= -->
+
+    <!-- 初回起動：名前入力画面 -->
+    <div id="overlay-setup" class="overlay">
+      <div class="overlay-box">
+        <div class="overlay-title">
+          <span class="glow-text">MATCH 3</span><br>
+          <span class="subtitle-text">カラーコネクト</span>
+        </div>
+        <div class="setup-section">
+          <div class="setup-label">PLAYER NAME</div>
+          <input id="setup-name-input" class="name-input" type="text"
+            placeholder="NO NAME" maxlength="20"
+            autocomplete="off" spellcheck="false" />
+          <div class="name-hint">日本語（全角8文字）・半角大文字英数字（16文字）まで</div>
+          <div class="name-error" id="setup-name-error"></div>
+        </div>
+        <button id="setup-confirm-btn" class="btn btn-primary btn-large">▶ GAME START</button>
+      </div>
+    </div>
+
+    <!-- スタート画面 -->
+    <div id="overlay-start" class="overlay">
+      <div class="overlay-box">
+        <div class="overlay-title">
+          <span class="glow-text">MATCH 3</span><br>
+          <span class="subtitle-text">カラーコネクト</span>
+        </div>
+        <div class="player-nameplate">
+          <span class="nameplate-label">PLAYER</span>
+          <span class="nameplate-value" id="title-player-name">NO NAME</span>
+        </div>
+        <ul class="rules">
+          <li>同じ色のブロックを<strong>3つ以上</strong>つなごう</li>
+          <li>上下左右に隣接したブロックをなぞって選択</li>
+          <li>連続で消すと<strong>コンボボーナス</strong>が加算！</li>
+        </ul>
+        <!-- 難易度選択 -->
+        <div class="difficulty-wrap">
+          <div class="difficulty-label">DIFFICULTY</div>
+          <div class="difficulty-btns" role="radiogroup" aria-label="難易度選択">
+            <button class="btn btn-diff" data-diff="easy"   aria-pressed="false">EASY</button>
+            <button class="btn btn-diff active" data-diff="normal" aria-pressed="true">NORMAL</button>
+            <button class="btn btn-diff" data-diff="hard"   aria-pressed="false">HARD</button>
+          </div>
+          <div class="difficulty-desc" id="diff-desc">60秒 ／ 5色 ／ 標準スコア</div>
+        </div>
+        <!-- タイトルアクションボタン -->
+        <div class="title-actions">
+          <button id="start-main-btn" class="btn btn-primary btn-large">▶ GAME START</button>
+          <div class="title-sub-btns">
+            <button id="ranking-btn" class="btn btn-icon" aria-label="ランキング">🏆 RANKING</button>
+            <button id="settings-btn" class="btn btn-icon" aria-label="設定">⚙ SETTINGS</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ゲームオーバー画面 -->
+    <div id="overlay-result" class="overlay">
+      <div class="overlay-box">
+        <div class="result-title" id="result-title">GAME OVER</div>
+        <div class="result-diff-badge" id="result-diff-badge"></div>
+        <div class="result-score-wrap">
+          <div class="result-label">SCORE</div>
+          <div class="result-score" id="result-score">0</div>
+        </div>
+        <div class="result-stats">
+          <div class="result-stat-item">
+            <span class="result-stat-label">BEST COMBO</span>
+            <span class="result-stat-value" id="result-combo">0</span>
+          </div>
+          <div class="result-stat-item">
+            <span class="result-stat-label">BEST</span>
+            <span class="result-stat-value" id="result-best">0</span>
+          </div>
+        </div>
+        <div id="new-record-badge" class="new-record hidden">★ NEW RECORD ★</div>
+        <div id="rank-in-badge" class="rank-in hidden"></div>
+        <div class="result-buttons">
+          <button id="retry-btn" class="btn btn-primary btn-large">↺ RETRY</button>
+          <button id="title-btn" class="btn btn-secondary btn-large">⌂ TITLE</button>
+          <button id="result-ranking-btn" class="btn btn-secondary btn-large">🏆 RANKING</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ランキング画面 -->
+    <div id="overlay-ranking" class="overlay">
+      <div class="overlay-box overlay-box-wide">
+        <div class="ranking-header">
+          <span class="ranking-title">🏆 RANKING</span>
+          <div class="ranking-diff-tabs">
+            <button class="btn btn-diff-tab active" data-diff="easy">EASY</button>
+            <button class="btn btn-diff-tab" data-diff="normal">NORMAL</button>
+            <button class="btn btn-diff-tab" data-diff="hard">HARD</button>
+          </div>
+        </div>
+        <div id="ranking-list" class="ranking-list"></div>
+        <button id="ranking-close-btn" class="btn btn-secondary">✕ CLOSE</button>
+      </div>
+    </div>
+
+    <!-- 設定画面 -->
+    <div id="overlay-settings" class="overlay">
+      <div class="overlay-box">
+        <div class="settings-title">⚙ SETTINGS</div>
+        <div class="setup-section">
+          <div class="setup-label">PLAYER NAME</div>
+          <input id="settings-name-input" class="name-input" type="text"
+            placeholder="NO NAME" maxlength="20"
+            autocomplete="off" spellcheck="false" />
+          <div class="name-hint">日本語（全角8文字）・半角大文字英数字（16文字）まで</div>
+          <div class="name-error" id="settings-name-error"></div>
+        </div>
+        <div class="settings-buttons">
+          <button id="settings-save-btn" class="btn btn-primary btn-large">✓ SAVE</button>
+          <button id="settings-close-btn" class="btn btn-secondary btn-large">✕ CANCEL</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- コンボポップ -->
+    <div id="combo-pop" class="combo-pop" aria-hidden="true"></div>
+    <!-- スコアポップ -->
+    <div id="score-pop" class="score-pop" aria-hidden="true"></div>
+
+  </div><!-- /#app -->
+
+  <script src="./script.js"></script>
+</body>
+</html>
