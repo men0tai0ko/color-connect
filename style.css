@@ -1,5 +1,5 @@
 /* ============================================================
-   マッチ3・カラーコネクト — style.css  v1.3.1
+   マッチ3・カラーコネクト — style.css  v1.9.0
    ネオン×ダークアーケード テーマ
    ============================================================ */
 
@@ -514,6 +514,8 @@ body::after {
 /* ── Accessibility ─────────────────────────────────────── */
 @media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { animation-duration:1ms !important; transition-duration:1ms !important; }
+  /* reduced-motionではpulseアニメーションが消えるため静的な白グローで代替 */
+  .block.hint { box-shadow: 0 0 12px rgba(255,255,255,0.7), 0 0 24px rgba(255,255,255,0.3) !important; }
 }
 .block:focus-visible { outline:3px solid var(--accent-cyan); outline-offset:2px; }
 
@@ -841,6 +843,54 @@ body.dragging #game-board .block { cursor:grabbing; }
   box-shadow:
     0 0 18px rgba(255,255,255,0.8),
     0 0 32px rgba(255,255,255,0.4) !important;
+}
+
+/* ============================================================
+   v1.9.0 追加スタイル — ヒント機能
+   ============================================================ */
+
+/* ヒント対象ブロック: 白グローpulse（selected/reachableと独立） */
+.block.hint {
+  animation: hint-glow 1.5s ease-in-out infinite alternate;
+}
+@keyframes hint-glow {
+  from { box-shadow: 0 0 6px  rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.3); }
+  to   { box-shadow: 0 0 18px rgba(255,255,255,0.9), 0 0 32px rgba(255,255,255,0.4), inset 0 -3px 0 rgba(0,0,0,0.3); }
+}
+
+/* 設定画面トグルUI */
+.toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  width: 100%; cursor: pointer; gap: 12px;
+}
+.toggle-desc {
+  font-family: var(--font-game); font-size: 11px;
+  color: var(--text-muted); letter-spacing: 1px;
+}
+.toggle-checkbox { display: none; }
+.toggle-knob {
+  flex-shrink: 0;
+  width: 44px; height: 24px;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 12px; position: relative;
+  transition: background 200ms ease, border-color 200ms ease;
+}
+.toggle-knob::after {
+  content: ''; position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  background: var(--text-muted);
+  border-radius: 50%;
+  transition: transform 200ms ease, background 200ms ease;
+}
+.toggle-checkbox:checked + .toggle-knob {
+  background: rgba(0,194,255,0.3);
+  border-color: rgba(0,194,255,0.6);
+}
+.toggle-checkbox:checked + .toggle-knob::after {
+  transform: translateX(20px);
+  background: var(--accent-cyan);
 }
 
 /* ============================================================

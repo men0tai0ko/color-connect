@@ -1,6 +1,6 @@
 # アーキテクチャ — マッチ3・カラーコネクト
 
-対応バージョン: v1.8.1
+対応バージョン: v1.9.0
 
 ---
 
@@ -40,7 +40,8 @@ script.js
 │   ├── getBest / setBest
 │   ├── getPlayerName / setPlayerName
 │   ├── isInitialized / setInitialized
-│   └── getRanking / setRanking
+│   ├── getRanking / setRanking
+│   └── getHint / setHint
 │
 ├── RankingManager        ランキング管理
 │   └── addEntry()        スコア登録・上位10件維持
@@ -69,10 +70,20 @@ script.js
 ├── WildcardManager       WCブロック出現制御
 │   ├── MAX_WILD          上限数 (6)
 │   ├── onTick()          タイマー毎秒呼び出し・しきい値判定
-│   ├── _spawnWild()      2個同時出現ループ
+│   ├── _spawnWild()      2個同時出現ループ（完了後HintManager.cancel）
 │   ├── _spawnOne()       1個出現処理（距離制約・橋渡し優先）
 │   ├── _wildBridgeCount() 橋渡し成立判定
 │   └── onRemove()        消去時のwildCount減算
+│
+├── HintManager           無操作ヒント表示制御
+│   ├── IDLE_SEC          無操作判定秒数 (5)
+│   ├── start()           ゲーム開始時にタイマーをセット
+│   ├── cancel(reset)     ヒント解除（reset=true: タイマー再セット）
+│   ├── _schedule()       setTimeoutでタイマーをセット
+│   ├── _fire()           無操作タイムアウト時に候補探索→表示
+│   ├── _applyHint()      座標リストからDOMにhintクラスを付与
+│   ├── _hideHint()       hintクラスを除去・候補リセット
+│   └── _findCandidate()  ChainManager同一ロジックでBFS候補探索
 │
 ├── TimerManager          setInterval によるタイマー管理
 │   ├── start()
@@ -84,6 +95,7 @@ script.js
 │   ├── animateDrop()     落下アニメーション
 │   ├── updateChainBar()  チェーンバー更新
 │   ├── updateManualShuffleBtn()  手動シャッフルボタン状態
+│   ├── updateHintToggle()        ヒントトグルUI状態更新
 │   ├── showCountdown() / hideCountdown()
 │   ├── showResult() / hideResult()
 │   ├── showRanking() / hideRanking()
@@ -96,7 +108,7 @@ script.js
     ├── init()            イベント登録・初期表示
     ├── start()           ゲーム開始（グリッド構築→カウントダウン）
     ├── _startCountdown() 3→2→1→GO! 制御
-    ├── _beginGame()      タイマー起動・操作有効化
+    ├── _beginGame()      タイマー起動・操作有効化・HintManager起動
     ├── commitChain()     チェーン確定・消去・補充・詰まり検出
     ├── _doShuffle()      自動シャッフル演出
     ├── _doManualShuffle() 手動シャッフル（ペナルティ・競合制御）
@@ -141,8 +153,10 @@ commitChain()
 | WC数 | `GameState.wildCount` | `number` |
 | アニメーション中 | `Game._animating` | `boolean` |
 | ランキング遷移元 | `UIManager._rankingFrom` | `'title'\|'result'` |
+| ヒント候補座標 | `HintManager._cells` | `[number,number][]\|null` |
 | ベストスコア | LocalStorage | `number` |
 | ランキング | LocalStorage | `JSON配列` |
+| ヒントON/OFF | LocalStorage | `'0'\|'1'` |
 
 ---
 
