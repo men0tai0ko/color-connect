@@ -1,6 +1,6 @@
 /**
- * マッチ3・カラーコネクト — script.js  v1.9.0
- * 追加: ヒント機能（無操作5秒で消去可能チェーン候補をハイライト表示）
+ * マッチ3・カラーコネクト — script.js  v1.9.1
+ * 修正: WC出現時にヒント表示が消えたままになるバグを修正
  */
 'use strict';
 
@@ -639,7 +639,7 @@ const WildcardManager = {
       if (GameState.wildCount >= this.MAX_WILD) break;
       this._spawnOne();
     }
-    HintManager.cancel(false); // WC出現でグリッドが変化したため古い候補を破棄
+    HintManager.refreshHint(); // WC出現でグリッドが変化したため表示中なら候補を更新
   },
 
   // 1個分の出現処理
@@ -767,6 +767,17 @@ const HintManager = {
       if (el) el.classList.remove('hint');
     });
     this._cells = null;
+  },
+
+  // グリッドが外部要因（WC出現等）で変化したとき呼ぶ
+  // 表示中なら候補を再探索して再表示。タイマーはそのまま継続。
+  refreshHint() {
+    if (!this._cells) return;      // 表示中でなければ何もしない
+    this._hideHint();              // 古い候補のクラスを除去
+    const candidate = this._findCandidate();
+    if (!candidate) return;
+    this._cells = candidate;
+    this._applyHint();
   },
 
   // ランダムな消去可能候補チェーンを1件返す（ChainManagerの色判定ロジックに準拠）
